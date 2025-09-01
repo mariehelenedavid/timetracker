@@ -99,16 +99,11 @@
                 { id: 4, name: 'Jean Administrateur', email: 'admin@entreprise.com', password: 'admin123', role: 'admin' }
             ];
 
-            const [employees] = useState([
-                { id: 1, name: 'Marie Dubois', email: 'marie.dubois@entreprise.com' },
-                { id: 2, name: 'Pierre Martin', email: 'pierre.martin@entreprise.com' },
-                { id: 3, name: 'Sophie Laurent', email: 'sophie.laurent@entreprise.com' }
-            ]);
-
-            const [projects] = useState([
-                { id: 1, name: 'Site Web Client A', description: 'Développement site e-commerce' },
-                { id: 2, name: 'App Mobile B', description: 'Application mobile iOS/Android' },
-                { id: 3, name: 'Maintenance Système', description: 'Maintenance serveurs et infrastructure' }
+            const [employees, setEmployees] = useState([
+                { id: 1, name: 'Marie Dubois', email: 'marie.dubois@entreprise.com', hourlyRate: 22.50, role: 'employee', active: true },
+                { id: 2, name: 'Pierre Martin', email: 'pierre.martin@entreprise.com', hourlyRate: 25.00, role: 'employee', active: true },
+                { id: 3, name: 'Sophie Laurent', email: 'sophie.laurent@entreprise.com', hourlyRate: 24.75, role: 'employee', active: true },
+                { id: 4, name: 'Jean Administrateur', email: 'admin@entreprise.com', hourlyRate: 35.00, role: 'admin', active: true }
             ]);
 
             const [timeEntries, setTimeEntries] = useState([
@@ -150,7 +145,7 @@
                 }
             ]);
 
-            const [activeTab, setActiveTab] = useState('timeentry');
+            const [activeTab, setActiveTab] = useState('dashboard');
             const [editingEntry, setEditingEntry] = useState(null);
             const [editingEmployee, setEditingEmployee] = useState(null);
             const [showAddEmployee, setShowAddEmployee] = useState(false);
@@ -214,7 +209,7 @@
             const handleLogout = () => {
                 setCurrentUser(null);
                 setLoginForm({ email: '', password: '' });
-                setActiveTab('timeentry');
+                setActiveTab('dashboard');
             };
 
             // Calculer les heures entre deux temps
@@ -237,26 +232,12 @@
             const getTaskLabel = (value) => taskOptions.find(task => task.value === value)?.label || value;
 
             // Fonctions pour la gestion des semaines
-            const getWeekNumber = (dateString) => {
-                const date = new Date(dateString);
-                const startOfYear = new Date(date.getFullYear(), 0, 1);
-                const days = Math.floor((date - startOfYear) / (24 * 60 * 60 * 1000));
-                return Math.ceil((days + startOfYear.getDay() + 1) / 7);
-            };
-
             const getWeekStart = (dateString) => {
                 const date = new Date(dateString);
                 const day = date.getDay();
                 const diff = date.getDate() - day + (day === 0 ? -6 : 1);
                 const monday = new Date(date.setDate(diff));
                 return monday.toISOString().split('T')[0];
-            };
-
-            const getWeekEnd = (dateString) => {
-                const weekStart = new Date(getWeekStart(dateString));
-                const weekEnd = new Date(weekStart);
-                weekEnd.setDate(weekStart.getDate() + 6);
-                return weekEnd.toISOString().split('T')[0];
             };
 
             const getCurrentWeekStart = () => {
@@ -287,90 +268,7 @@
                 return timeEntries.filter(entry => entry.employeeId === currentUser?.id);
             };
 
-            // Ajouter un employé (admin seulement)
-            const addEmployee = () => {
-                if (newEmployee.name && newEmployee.email && newEmployee.hourlyRate && newEmployee.password) {
-                    const employee = {
-                        id: Date.now(),
-                        name: newEmployee.name,
-                        email: newEmployee.email.toLowerCase(),
-                        hourlyRate: parseFloat(newEmployee.hourlyRate),
-                        role: newEmployee.role,
-                        active: true
-                    };
-                    
-                    const user = {
-                        id: employee.id,
-                        name: newEmployee.name,
-                        email: newEmployee.email.toLowerCase(),
-                        password: newEmployee.password,
-                        role: newEmployee.role
-                    };
-
-                    setEmployees([...employees, employee]);
-                    users.push(user);
-                    setNewEmployee({ name: '', email: '', hourlyRate: '', password: '', role: 'employee' });
-                    setShowAddEmployee(false);
-                    alert('✅ Employé ajouté avec succès !');
-                } else {
-                    alert('⚠️ Veuillez remplir tous les champs');
-                }
-            };
-
-            // Commencer l'édition d'un employé
-            const startEditingEmployee = (employee) => {
-                setEditingEmployee({...employee});
-            };
-
-            // Sauvegarder les modifications d'employé
-            const saveEmployeeEdit = () => {
-                const updatedEmployees = employees.map(emp => 
-                    emp.id === editingEmployee.id 
-                        ? {...editingEmployee, hourlyRate: parseFloat(editingEmployee.hourlyRate)}
-                        : emp
-                );
-                
-                // Mettre à jour aussi dans le tableau users
-                const userIndex = users.findIndex(u => u.id === editingEmployee.id);
-                if (userIndex !== -1) {
-                    users[userIndex].role = editingEmployee.role;
-                }
-                
-                setEmployees(updatedEmployees);
-                setEditingEmployee(null);
-                alert('✅ Employé mis à jour avec succès !');
-            };
-
-            // Annuler l'édition d'employé
-            const cancelEmployeeEdit = () => {
-                setEditingEmployee(null);
-            };
-
-            // Activer/Désactiver un employé
-            const toggleEmployeeActive = (employeeId) => {
-                const updatedEmployees = employees.map(emp => 
-                    emp.id === employeeId 
-                        ? {...emp, active: !emp.active}
-                        : emp
-                );
-                setEmployees(updatedEmployees);
-                
-                const employee = employees.find(emp => emp.id === employeeId);
-                const action = employee.active ? 'désactivé' : 'réactivé';
-                alert(`✅ Employé ${action} avec succès !`);
-            };
-
-            // Réinitialiser le mot de passe
-            const resetPassword = (employeeId) => {
-                const newPassword = 'temp' + Math.floor(Math.random() * 1000);
-                const userIndex = users.findIndex(u => u.id === employeeId);
-                if (userIndex !== -1) {
-                    users[userIndex].password = newPassword;
-                    alert(`🔐 Nouveau mot de passe temporaire: ${newPassword}\nL'employé devra le changer lors de sa prochaine connexion.`);
-                }
-            };
-
-            // Ajouter une nouvelle entrée
+            // Ajouter une nouvelle entrée de temps
             const addTimeEntry = () => {
                 if (newEntry.startTime && newEntry.endTime) {
                     const employeeId = currentUser.role === 'admin' ? parseInt(newEntry.employeeId) : currentUser.id;
@@ -460,95 +358,13 @@
                 }
             };
 
-            // Calculs avancés pour les rapports (avec gestion des pauses)
-            const getWeeklyData = () => {
-                const weeks = {};
-                
-                timeEntries.forEach(entry => {
-                    const weekStart = getWeekStart(entry.date);
-                    const weekEnd = getWeekEnd(entry.date);
-                    const weekKey = `${weekStart}`;
-                    const taskInfo = taskOptions.find(t => t.value === entry.task);
-                    const isWorkTime = taskInfo ? taskInfo.countAsWork : true;
-                    
-                    if (!weeks[weekKey]) {
-                        weeks[weekKey] = {
-                            weekStart,
-                            weekEnd,
-                            weekNumber: getWeekNumber(entry.date),
-                            employees: {},
-                            totalHours: 0,
-                            totalWorkHours: 0,
-                            totalPauseHours: 0,
-                            totalProduction: 0,
-                            totalOther: 0,
-                            totalQuantity: 0,
-                            totalCost: 0
-                        };
-                    }
-                    
-                    if (!weeks[weekKey].employees[entry.employeeId]) {
-                        const employee = employees.find(emp => emp.id === entry.employeeId);
-                        weeks[weekKey].employees[entry.employeeId] = {
-                            name: employee?.name || 'Inconnu',
-                            hourlyRate: employee?.hourlyRate || 0,
-                            hours: 0,
-                            workHours: 0,
-                            pauseHours: 0,
-                            productionHours: 0,
-                            otherHours: 0,
-                            quantity: 0,
-                            cost: 0
-                        };
-                    }
-                    
-                    const empData = weeks[weekKey].employees[entry.employeeId];
-                    const employee = employees.find(emp => emp.id === entry.employeeId);
-                    const hourlyRate = employee?.hourlyRate || 0;
-                    
-                    empData.hours += entry.hours;
-                    empData.quantity += (entry.quantity || 0);
-                    weeks[weekKey].totalHours += entry.hours;
-                    weeks[weekKey].totalQuantity += (entry.quantity || 0);
-                    
-                    if (isWorkTime) {
-                        empData.workHours += entry.hours;
-                        empData.cost += (entry.hours * hourlyRate);
-                        weeks[weekKey].totalWorkHours += entry.hours;
-                        weeks[weekKey].totalCost += (entry.hours * hourlyRate);
-                        
-                        if (entry.task === 'production') {
-                            empData.productionHours += entry.hours;
-                            weeks[weekKey].totalProduction += entry.hours;
-                        } else {
-                            empData.otherHours += entry.hours;
-                            weeks[weekKey].totalOther += entry.hours;
-                        }
-                    } else {
-                        // C'est une pause
-                        empData.pauseHours += entry.hours;
-                        weeks[weekKey].totalPauseHours += entry.hours;
-                    }
-                });
-                
-                return Object.values(weeks).sort((a, b) => new Date(b.weekStart) - new Date(a.weekStart));
-            };
-
-            // Calculs pour le dashboard (avec gestion des pauses)
-            const totalHoursToday = timeEntries
-                .filter(entry => entry.date === new Date().toISOString().split('T')[0])
-                .reduce((sum, entry) => sum + entry.hours, 0);
-
+            // Calculs pour le dashboard
             const totalWorkHoursToday = timeEntries
                 .filter(entry => {
                     const taskInfo = taskOptions.find(t => t.value === entry.task);
                     const isWorkTime = taskInfo ? taskInfo.countAsWork : true;
                     return entry.date === new Date().toISOString().split('T')[0] && isWorkTime;
                 })
-                .reduce((sum, entry) => sum + entry.hours, 0);
-
-            const totalHoursThisWeek = timeEntries
-                .filter(entry => isCurrentWeek(entry.date))
                 .reduce((sum, entry) => sum + entry.hours, 0);
 
             const totalWorkHoursThisWeek = timeEntries
@@ -558,12 +374,6 @@
                     return isCurrentWeek(entry.date) && isWorkTime;
                 })
                 .reduce((sum, entry) => sum + entry.hours, 0);
-
-            const totalQuantityToday = timeEntries
-                .filter(entry => entry.date === new Date().toISOString().split('T')[0])
-                .reduce((sum, entry) => sum + (entry.quantity || 0), 0);
-
-            const weeklyData = getWeeklyData();
 
             // Écran de connexion
             if (!currentUser) {
@@ -647,1145 +457,7 @@
                 );
             }
 
-            // Dashboard pour employés
-            if (activeTab === 'dashboard' && currentUser.role === 'employee') {
-                const myWeeklyData = weeklyData.map(week => ({
-                    ...week,
-                    myData: week.employees[currentUser.id] || {
-                        hours: 0, workHours: 0, pauseHours: 0, 
-                        productionHours: 0, otherHours: 0, quantity: 0
-                    }
-                })).filter(week => week.myData.hours > 0);
-
-                return (
-                    <div className="min-h-screen bg-gray-100">
-                        <header className="bg-white shadow-sm border-b">
-                            <div className="max-w-7xl mx-auto px-4 py-4">
-                                <div className="flex justify-between items-center">
-                                    <div className="flex items-center">
-                                        <ClockIcon />
-                                        <h1 className="text-2xl font-bold text-gray-900 ml-3">Mon Tableau de Bord</h1>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center text-sm text-gray-600">
-                                            <UserIcon />
-                                            <span className="font-medium ml-1">{currentUser.name}</span>
-                                            <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Employé</span>
-                                        </div>
-                                        <button
-                                            onClick={handleLogout}
-                                            className="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                                        >
-                                            <LogOutIcon />
-                                            <span className="ml-1">Déconnexion</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </header>
-
-                        <nav className="bg-white border-b">
-                            <div className="max-w-7xl mx-auto px-4">
-                                <div className="flex space-x-8">
-                                    <button
-                                        onClick={() => setActiveTab('dashboard')}
-                                        className="flex items-center px-4 py-4 text-sm font-medium text-blue-600 border-b-2 border-blue-600"
-                                    >
-                                        <BarChartIcon />
-                                        <span className="ml-2">Mon tableau de bord</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('timeentry')}
-                                        className="flex items-center px-4 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                                    >
-                                        <ClockIcon />
-                                        <span className="ml-2">Saisir mon temps</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </nav>
-
-                        <main className="max-w-7xl mx-auto px-4 py-8">
-                            {/* Vue d'ensemble personnelle */}
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                                <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg">
-                                    <h3 className="text-blue-100 text-sm">Heures travaillées aujourd'hui</h3>
-                                    <p className="text-2xl font-bold">{
-                                        timeEntries
-                                            .filter(entry => 
-                                                entry.employeeId === currentUser.id && 
-                                                entry.date === new Date().toISOString().split('T')[0] &&
-                                                (taskOptions.find(t => t.value === entry.task)?.countAsWork !== false)
-                                            )
-                                            .reduce((sum, entry) => sum + entry.hours, 0)
-                                            .toFixed(1)
-                                    }h</p>
-                                    <p className="text-xs text-blue-200 mt-1">
-                                        (Total avec pauses: {
-                                            timeEntries
-                                                .filter(entry => 
-                                                    entry.employeeId === currentUser.id && 
-                                                    entry.date === new Date().toISOString().split('T')[0]
-                                                )
-                                                .reduce((sum, entry) => sum + entry.hours, 0)
-                                                .toFixed(1)
-                                        }h)
-                                    </p>
-                                </div>
-
-                                <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg">
-                                    <h3 className="text-green-100 text-sm">Heures cette semaine</h3>
-                                    <p className="text-2xl font-bold">{
-                                        timeEntries
-                                            .filter(entry => 
-                                                entry.employeeId === currentUser.id && 
-                                                isCurrentWeek(entry.date) &&
-                                                (taskOptions.find(t => t.value === entry.task)?.countAsWork !== false)
-                                            )
-                                            .reduce((sum, entry) => sum + entry.hours, 0)
-                                            .toFixed(1)
-                                    }h</p>
-                                </div>
-
-                                <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
-                                    <h3 className="text-purple-100 text-sm">Production cette semaine</h3>
-                                    <p className="text-2xl font-bold">{
-                                        timeEntries
-                                            .filter(entry => 
-                                                entry.employeeId === currentUser.id && 
-                                                isCurrentWeek(entry.date) &&
-                                                entry.task === 'production'
-                                            )
-                                            .reduce((sum, entry) => sum + entry.hours, 0)
-                                            .toFixed(1)
-                                    }h</p>
-                                </div>
-
-                                <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-xl shadow-lg">
-                                    <h3 className="text-orange-100 text-sm">Quantité cette semaine</h3>
-                                    <p className="text-2xl font-bold">{
-                                        timeEntries
-                                            .filter(entry => 
-                                                entry.employeeId === currentUser.id && 
-                                                isCurrentWeek(entry.date)
-                                            )
-                                            .reduce((sum, entry) => sum + (entry.quantity || 0), 0)
-                                    }</p>
-                                </div>
-                            </div>
-
-                            {/* Historique des semaines */}
-                            <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-                                <h3 className="text-lg font-semibold mb-4">📊 Mon historique par semaine</h3>
-                                {myWeeklyData.length > 0 ? (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm">
-                                            <thead>
-                                                <tr className="bg-gray-50">
-                                                    <th className="text-left p-3 font-medium">Semaine</th>
-                                                    <th className="text-left p-3 font-medium">Heures totales</th>
-                                                    <th className="text-left p-3 font-medium">Heures travaillées</th>
-                                                    <th className="text-left p-3 font-medium">Pauses</th>
-                                                    <th className="text-left p-3 font-medium">Production</th>
-                                                    <th className="text-left p-3 font-medium">% Production</th>
-                                                    <th className="text-left p-3 font-medium">Autres tâches</th>
-                                                    <th className="text-left p-3 font-medium">Quantité</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {myWeeklyData.slice(0, 8).map((week, index) => {
-                                                    const prodPercent = week.myData.workHours > 0 ? 
-                                                        (week.myData.productionHours / week.myData.workHours * 100) : 0;
-                                                    
-                                                    return (
-                                                        <tr key={week.weekStart} className={`border-t ${index === 0 ? 'bg-blue-50' : ''}`}>
-                                                            <td className="p-3">
-                                                                <div className="font-medium">
-                                                                    Semaine {week.weekNumber} {index === 0 && <span className="text-blue-600">(Courante)</span>}
-                                                                </div>
-                                                                <div className="text-xs text-gray-500">
-                                                                    {week.weekStart} au {week.weekEnd}
-                                                                </div>
-                                                            </td>
-                                                            <td className="p-3 font-bold">{week.myData.hours.toFixed(1)}h</td>
-                                                            <td className="p-3 text-green-600 font-medium">{week.myData.workHours.toFixed(1)}h</td>
-                                                            <td className="p-3 text-gray-500">{week.myData.pauseHours.toFixed(1)}h</td>
-                                                            <td className="p-3 text-green-600 font-medium">{week.myData.productionHours.toFixed(1)}h</td>
-                                                            <td className="p-3">
-                                                                <div className="flex items-center">
-                                                                    <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                                                                        <div 
-                                                                            className={`h-2 rounded-full ${prodPercent >= 80 ? 'bg-green-500' : prodPercent >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                                                                            style={{width: `${prodPercent}%`}}
-                                                                        ></div>
-                                                                    </div>
-                                                                    <span className="text-sm">{prodPercent.toFixed(1)}%</span>
-                                                                </div>
-                                                            </td>
-                                                            <td className="p-3 text-orange-600 font-medium">{week.myData.otherHours.toFixed(1)}h</td>
-                                                            <td className="p-3 font-medium">{week.myData.quantity}</td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-8 text-gray-500">
-                                        <ClockIcon />
-                                        <p className="mt-2">Aucune heure enregistrée pour le moment</p>
-                                        <p className="text-sm">Commencez par saisir vos heures dans l'onglet "Saisir mon temps"</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Objectifs et conseils */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <div className="bg-white rounded-xl shadow-lg p-6">
-                                    <h3 className="text-lg font-semibold mb-4">🎯 Performance cette semaine</h3>
-                                    {myWeeklyData.length > 0 && myWeeklyData[0].myData.workHours > 0 ? (
-                                        <div className="space-y-4">
-                                            <div className="flex justify-between items-center p-3 bg-green-50 rounded">
-                                                <span className="font-medium">Temps en production</span>
-                                                <span className="font-bold text-green-600">
-                                                    {((myWeeklyData[0].myData.productionHours / myWeeklyData[0].myData.workHours) * 100).toFixed(1)}%
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between items-center p-3 bg-orange-50 rounded">
-                                                <span className="font-medium">Autres tâches</span>
-                                                <span className="font-bold text-orange-600">
-                                                    {((myWeeklyData[0].myData.otherHours / myWeeklyData[0].myData.workHours) * 100).toFixed(1)}%
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                                                <span className="font-medium">Temps de pause</span>
-                                                <span className="font-bold text-gray-600">
-                                                    {myWeeklyData[0].myData.pauseHours.toFixed(1)}h
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <p className="text-gray-500 text-center py-4">
-                                            Saisissez vos heures pour voir votre performance
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="bg-white rounded-xl shadow-lg p-6">
-                                    <h3 className="text-lg font-semibold mb-4">💡 Rappels importants</h3>
-                                    <div className="space-y-3 text-sm">
-                                        <div className="flex items-start p-3 bg-blue-50 rounded">
-                                            <span className="text-blue-500 mr-2">⏰</span>
-                                            <div>
-                                                <div className="font-medium">Saisie hebdomadaire</div>
-                                                <div className="text-gray-600">Vous pouvez saisir et modifier vos heures uniquement pour la semaine courante</div>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-start p-3 bg-yellow-50 rounded">
-                                            <span className="text-yellow-500 mr-2">☕</span>
-                                            <div>
-                                                <div className="font-medium">Pauses</div>
-                                                <div className="text-gray-600">Les pauses ne comptent pas dans vos heures travaillées mais restent visibles</div>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-start p-3 bg-green-50 rounded">
-                                            <span className="text-green-500 mr-2">🎯</span>
-                                            <div>
-                                                <div className="font-medium">Production</div>
-                                                <div className="text-gray-600">Privilégiez les tâches de production pour optimiser votre efficacité</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </main>
-                    </div>
-                );
-            }
-                return (
-                    <div className="min-h-screen bg-gray-100">
-                        <header className="bg-white shadow-sm border-b">
-                            <div className="max-w-7xl mx-auto px-4 py-4">
-                                <div className="flex justify-between items-center">
-                                    <div className="flex items-center">
-                                        <ClockIcon />
-                                        <h1 className="text-2xl font-bold text-gray-900 ml-3">TimeTracker Pro - Admin</h1>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <button
-                                            onClick={() => setShowAddEmployee(true)}
-                                            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium"
-                                        >
-                                            👤+ Ajouter Employé
-                                        </button>
-                                        <div className="flex items-center text-sm text-gray-600">
-                                            <ShieldIcon />
-                                            <span className="font-medium ml-1">{currentUser.name}</span>
-                                            <span className="ml-2 text-xs bg-red-100 text-red-700 px-2 py-1 rounded">Admin</span>
-                                        </div>
-                                        <button
-                                            onClick={handleLogout}
-                                            className="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                                        >
-                                            <LogOutIcon />
-                                            <span className="ml-1">Déconnexion</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </header>
-
-                        <nav className="bg-white border-b">
-                            <div className="max-w-7xl mx-auto px-4">
-                                <div className="flex space-x-8">
-                                    <button
-                                        onClick={() => setActiveTab('dashboard')}
-                                        className="flex items-center px-4 py-4 text-sm font-medium text-blue-600 border-b-2 border-blue-600"
-                                    >
-                                        <BarChartIcon />
-                                        <span className="ml-2">Tableau de bord</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('timeentry')}
-                                        className="flex items-center px-4 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                                    >
-                                        <ClockIcon />
-                                        <span className="ml-2">Saisie du temps</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('reports')}
-                                        className="flex items-center px-4 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                                    >
-                                        📊 Rapports avancés
-                                    </button>
-                                </div>
-                            </div>
-                        </nav>
-
-                        <main className="max-w-7xl mx-auto px-4 py-8">
-                            {/* Vue d'ensemble */}
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                                <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg">
-                                    <h3 className="text-blue-100 text-sm">Heures aujourd'hui</h3>
-                                    <p className="text-2xl font-bold">{totalHoursToday.toFixed(1)}h</p>
-                                </div>
-                                <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg">
-                                    <h3 className="text-green-100 text-sm">Heures cette semaine</h3>
-                                    <p className="text-2xl font-bold">{totalHoursThisWeek.toFixed(1)}h</p>
-                                </div>
-                                <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
-                                    <h3 className="text-purple-100 text-sm">Employés actifs</h3>
-                                    <p className="text-2xl font-bold">{employees.filter(emp => emp.active).length}</p>
-                                </div>
-                                <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-xl shadow-lg">
-                                    <h3 className="text-orange-100 text-sm">Coût cette semaine</h3>
-                                    <p className="text-2xl font-bold">
-                                        {weeklyData.length > 0 ? `${weeklyData[0].totalCost.toFixed(2)}` : '$0.00'}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Temps par employé - Semaine courante */}
-                            <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-                                <h3 className="text-lg font-semibold mb-4">⏱️ Temps par employé - Semaine courante</h3>
-                                {weeklyData.length > 0 && (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm">
-                                            <thead>
-                                                <tr className="bg-gray-50">
-                                                    <th className="text-left p-3 font-medium">Employé</th>
-                                                    <th className="text-left p-3 font-medium">Statut</th>
-                                                    <th className="text-left p-3 font-medium">Heures totales</th>
-                                                    <th className="text-left p-3 font-medium">Production</th>
-                                                    <th className="text-left p-3 font-medium">Autres tâches</th>
-                                                    <th className="text-left p-3 font-medium">Quantité</th>
-                                                    <th className="text-left p-3 font-medium">Taux/h</th>
-                                                    <th className="text-left p-3 font-medium">Coût total</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {Object.entries(weeklyData[0]?.employees || {}).map(([empId, empData]) => {
-                                                    const employee = employees.find(emp => emp.id === parseInt(empId));
-                                                    return (
-                                                        <tr key={empId} className={`border-t ${!employee?.active ? 'opacity-50' : ''}`}>
-                                                            <td className="p-3 font-medium">{empData.name}</td>
-                                                            <td className="p-3">
-                                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                                    employee?.active 
-                                                                        ? 'bg-green-100 text-green-800' 
-                                                                        : 'bg-red-100 text-red-800'
-                                                                }`}>
-                                                                    {employee?.active ? '✅ Actif' : '❌ Inactif'}
-                                                                </span>
-                                                            </td>
-                                                            <td className="p-3">{empData.hours.toFixed(1)}h</td>
-                                                            <td className="p-3 text-green-600">{empData.productionHours.toFixed(1)}h</td>
-                                                            <td className="p-3 text-orange-600">{empData.otherHours.toFixed(1)}h</td>
-                                                            <td className="p-3">{empData.quantity}</td>
-                                                            <td className="p-3">${empData.hourlyRate.toFixed(2)}</td>
-                                                            <td className="p-3 font-bold">${empData.cost.toFixed(2)}</td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Répartition Production vs Autres tâches */}
-                            <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-                                <h3 className="text-lg font-semibold mb-4">📊 Répartition des tâches par semaine</h3>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm">
-                                        <thead>
-                                            <tr className="bg-gray-50">
-                                                <th className="text-left p-3 font-medium">Semaine</th>
-                                                <th className="text-left p-3 font-medium">Heures totales</th>
-                                                <th className="text-left p-3 font-medium">Heures travaillées</th>
-                                                <th className="text-left p-3 font-medium">Pauses</th>
-                                                <th className="text-left p-3 font-medium">Production</th>
-                                                <th className="text-left p-3 font-medium">% Production</th>
-                                                <th className="text-left p-3 font-medium">Autres tâches</th>
-                                                <th className="text-left p-3 font-medium">% Autres</th>
-                                                <th className="text-left p-3 font-medium">Quantité</th>
-                                                <th className="text-left p-3 font-medium">Coût total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {weeklyData.slice(0, 8).map((week, index) => {
-                                                const prodPercent = week.totalWorkHours > 0 ? (week.totalProduction / week.totalWorkHours * 100) : 0;
-                                                const otherPercent = week.totalWorkHours > 0 ? (week.totalOther / week.totalWorkHours * 100) : 0;
-                                                
-                                                return (
-                                                    <tr key={week.weekStart} className={`border-t ${index === 0 ? 'bg-blue-50' : ''}`}>
-                                                        <td className="p-3">
-                                                            <div className="font-medium">
-                                                                Sem. {week.weekNumber} {index === 0 && <span className="text-blue-600">(Courante)</span>}
-                                                            </div>
-                                                            <div className="text-xs text-gray-500">
-                                                                {week.weekStart} au {week.weekEnd}
-                                                            </div>
-                                                        </td>
-                                                        <td className="p-3 font-bold">{week.totalHours.toFixed(1)}h</td>
-                                                        <td className="p-3 font-bold text-blue-600">{week.totalWorkHours.toFixed(1)}h</td>
-                                                        <td className="p-3 text-gray-500">{week.totalPauseHours.toFixed(1)}h</td>
-                                                        <td className="p-3 text-green-600 font-medium">{week.totalProduction.toFixed(1)}h</td>
-                                                        <td className="p-3">
-                                                            <div className="flex items-center">
-                                                                <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                                                                    <div 
-                                                                        className="bg-green-500 h-2 rounded-full" 
-                                                                        style={{width: `${prodPercent}%`}}
-                                                                    ></div>
-                                                                </div>
-                                                                <span className="text-sm">{prodPercent.toFixed(1)}%</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="p-3 text-orange-600 font-medium">{week.totalOther.toFixed(1)}h</td>
-                                                        <td className="p-3">
-                                                            <div className="flex items-center">
-                                                                <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                                                                    <div 
-                                                                        className="bg-orange-500 h-2 rounded-full" 
-                                                                        style={{width: `${otherPercent}%`}}
-                                                                    ></div>
-                                                                </div>
-                                                                <span className="text-sm">{otherPercent.toFixed(1)}%</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="p-3">{week.totalQuantity}</td>
-                                                        <td className="p-3 font-bold">${week.totalCost.toFixed(2)}</td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </main>
-
-                        {/* Modal d'ajout d'employé */}
-                        {showAddEmployee && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                                <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
-                                    <h3 className="text-lg font-semibold mb-4">👤 Ajouter un nouvel employé</h3>
-                                    
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Nom complet *</label>
-                                            <input
-                                                type="text"
-                                                value={newEmployee.name}
-                                                onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})}
-                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                                placeholder="Ex: Marie Dubois"
-                                            />
-                                        </div>
-                                        
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                                            <input
-                                                type="email"
-                                                value={newEmployee.email}
-                                                onChange={(e) => setNewEmployee({...newEmployee, email: e.target.value})}
-                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                                placeholder="marie.dubois@entreprise.com"
-                                            />
-                                        </div>
-                                        
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Salaire horaire ($) *</label>
-                                            <input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                value={newEmployee.hourlyRate}
-                                                onChange={(e) => setNewEmployee({...newEmployee, hourlyRate: e.target.value})}
-                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                                placeholder="22.50"
-                                            />
-                                        </div>
-                                        
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Mot de passe temporaire *</label>
-                                            <input
-                                                type="text"
-                                                value={newEmployee.password}
-                                                onChange={(e) => setNewEmployee({...newEmployee, password: e.target.value})}
-                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                                placeholder="motdepasse123"
-                                            />
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="flex justify-end gap-3 mt-6">
-                                        <button
-                                            onClick={() => setShowAddEmployee(false)}
-                                            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-                                        >
-                                            Annuler
-                                        </button>
-                                        <button
-                                            onClick={addEmployee}
-                                            className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg"
-                                        >
-                                            Ajouter l'employé
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                );
-            }
-
-            // Gestion des employés (admin seulement)
-            if (activeTab === 'employees' && currentUser.role === 'admin') {
-                return (
-                    <div className="min-h-screen bg-gray-100">
-                        <header className="bg-white shadow-sm border-b">
-                            <div className="max-w-7xl mx-auto px-4 py-4">
-                                <div className="flex justify-between items-center">
-                                    <div className="flex items-center">
-                                        <ClockIcon />
-                                        <h1 className="text-2xl font-bold text-gray-900 ml-3">Gestion des Employés</h1>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <button
-                                            onClick={() => setShowAddEmployee(true)}
-                                            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
-                                        >
-                                            <PlusIcon />
-                                            Ajouter Employé
-                                        </button>
-                                        <div className="flex items-center text-sm text-gray-600">
-                                            <ShieldIcon />
-                                            <span className="font-medium ml-1">{currentUser.name}</span>
-                                            <span className="ml-2 text-xs bg-red-100 text-red-700 px-2 py-1 rounded">Admin</span>
-                                        </div>
-                                        <button
-                                            onClick={handleLogout}
-                                            className="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                                        >
-                                            <LogOutIcon />
-                                            <span className="ml-1">Déconnexion</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </header>
-
-                        <nav className="bg-white border-b">
-                            <div className="max-w-7xl mx-auto px-4">
-                                <div className="flex space-x-8">
-                                    <button
-                                        onClick={() => setActiveTab('dashboard')}
-                                        className="flex items-center px-4 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                                    >
-                                        <BarChartIcon />
-                                        <span className="ml-2">Tableau de bord</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('timeentry')}
-                                        className="flex items-center px-4 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                                    >
-                                        <ClockIcon />
-                                        <span className="ml-2">Saisie du temps</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('employees')}
-                                        className="flex items-center px-4 py-4 text-sm font-medium text-blue-600 border-b-2 border-blue-600"
-                                    >
-                                        👥 <span className="ml-2">Gestion des employés</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('reports')}
-                                        className="flex items-center px-4 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                                    >
-                                        📊 <span className="ml-2">Rapports avancés</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </nav>
-
-                        <main className="max-w-7xl mx-auto px-4 py-8">
-                            {/* Statistiques des employés */}
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                                <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg">
-                                    <h3 className="text-blue-100 text-sm">Total employés</h3>
-                                    <p className="text-2xl font-bold">{employees.length}</p>
-                                </div>
-                                <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg">
-                                    <h3 className="text-green-100 text-sm">Employés actifs</h3>
-                                    <p className="text-2xl font-bold">{employees.filter(emp => emp.active).length}</p>
-                                </div>
-                                <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-xl shadow-lg">
-                                    <h3 className="text-orange-100 text-sm">Employés inactifs</h3>
-                                    <p className="text-2xl font-bold">{employees.filter(emp => !emp.active).length}</p>
-                                </div>
-                                <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
-                                    <h3 className="text-purple-100 text-sm">Salaire moyen/h</h3>
-                                    <p className="text-2xl font-bold">
-                                        ${employees.length > 0 ? (employees.reduce((sum, emp) => sum + emp.hourlyRate, 0) / employees.length).toFixed(2) : '0.00'}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Tableau de gestion des employés */}
-                            <div className="bg-white rounded-xl shadow-lg p-6">
-                                <h3 className="text-lg font-semibold mb-4">👥 Liste des employés</h3>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm">
-                                        <thead>
-                                            <tr className="bg-gray-50">
-                                                <th className="text-left p-3 font-medium">Statut</th>
-                                                <th className="text-left p-3 font-medium">Nom</th>
-                                                <th className="text-left p-3 font-medium">Email</th>
-                                                <th className="text-left p-3 font-medium">Rôle</th>
-                                                <th className="text-left p-3 font-medium">Salaire/h</th>
-                                                <th className="text-left p-3 font-medium">Heures cette semaine</th>
-                                                <th className="text-left p-3 font-medium">Coût semaine</th>
-                                                <th className="text-left p-3 font-medium">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {employees.map(employee => {
-                                                const weeklyHours = timeEntries
-                                                    .filter(entry => entry.employeeId === employee.id && isCurrentWeek(entry.date))
-                                                    .reduce((sum, entry) => sum + entry.hours, 0);
-                                                const weeklyCost = weeklyHours * employee.hourlyRate;
-
-                                                return (
-                                                    <tr key={employee.id} className={`border-t ${!employee.active ? 'bg-gray-100 opacity-75' : ''}`}>
-                                                        <td className="p-3">
-                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                                employee.active 
-                                                                    ? 'bg-green-100 text-green-800' 
-                                                                    : 'bg-red-100 text-red-800'
-                                                            }`}>
-                                                                {employee.active ? '✅ Actif' : '❌ Inactif'}
-                                                            </span>
-                                                        </td>
-                                                        <td className="p-3">
-                                                            {editingEmployee && editingEmployee.id === employee.id ? (
-                                                                <input
-                                                                    type="text"
-                                                                    value={editingEmployee.name}
-                                                                    onChange={(e) => setEditingEmployee({...editingEmployee, name: e.target.value})}
-                                                                    className="w-full p-1 text-sm border rounded font-medium"
-                                                                />
-                                                            ) : (
-                                                                <div>
-                                                                    <div className="font-medium">{employee.name}</div>
-                                                                    <div className="text-xs text-gray-500">ID: {employee.id}</div>
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                        <td className="p-3">
-                                                            {editingEmployee && editingEmployee.id === employee.id ? (
-                                                                <input
-                                                                    type="email"
-                                                                    value={editingEmployee.email}
-                                                                    onChange={(e) => setEditingEmployee({...editingEmployee, email: e.target.value})}
-                                                                    className="w-full p-1 text-sm border rounded"
-                                                                />
-                                                            ) : (
-                                                                employee.email
-                                                            )}
-                                                        </td>
-                                                        <td className="p-3">
-                                                            {editingEmployee && editingEmployee.id === employee.id ? (
-                                                                <select
-                                                                    value={editingEmployee.role}
-                                                                    onChange={(e) => setEditingEmployee({...editingEmployee, role: e.target.value})}
-                                                                    className="w-full p-1 text-sm border rounded"
-                                                                >
-                                                                    <option value="employee">👤 Employé</option>
-                                                                    <option value="admin">🔐 Admin</option>
-                                                                </select>
-                                                            ) : (
-                                                                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                                                    employee.role === 'admin' 
-                                                                        ? 'bg-red-100 text-red-700' 
-                                                                        : 'bg-blue-100 text-blue-700'
-                                                                }`}>
-                                                                    {employee.role === 'admin' ? '🔐 Admin' : '👤 Employé'}
-                                                                </span>
-                                                            )}
-                                                        </td>
-                                                        <td className="p-3">
-                                                            {editingEmployee && editingEmployee.id === employee.id ? (
-                                                                <div className="flex items-center">
-                                                                    <span className="text-xs mr-1">$</span>
-                                                                    <input
-                                                                        type="number"
-                                                                        step="0.01"
-                                                                        min="0"
-                                                                        value={editingEmployee.hourlyRate}
-                                                                        onChange={(e) => setEditingEmployee({...editingEmployee, hourlyRate: e.target.value})}
-                                                                        className="w-20 p-1 text-sm border rounded"
-                                                                    />
-                                                                </div>
-                                                            ) : (
-                                                                <span className="font-bold">${employee.hourlyRate.toFixed(2)}</span>
-                                                            )}
-                                                        </td>
-                                                        <td className="p-3 font-medium">{weeklyHours.toFixed(1)}h</td>
-                                                        <td className="p-3 font-bold">${weeklyCost.toFixed(2)}</td>
-                                                        <td className="p-3">
-                                                            <div className="flex gap-1 flex-wrap">
-                                                                {editingEmployee && editingEmployee.id === employee.id ? (
-                                                                    <>
-                                                                        <button
-                                                                            onClick={saveEmployeeEdit}
-                                                                            className="text-green-600 hover:text-green-800 text-xs px-2 py-1 bg-green-50 rounded"
-                                                                        >
-                                                                            ✓ Sauver
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={cancelEmployeeEdit}
-                                                                            className="text-gray-600 hover:text-gray-800 text-xs px-2 py-1 bg-gray-50 rounded"
-                                                                        >
-                                                                            ✗ Annuler
-                                                                        </button>
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <button
-                                                                            onClick={() => startEditingEmployee(employee)}
-                                                                            className="text-blue-500 hover:text-blue-700 text-xs px-2 py-1 bg-blue-50 rounded"
-                                                                            title="Modifier les informations"
-                                                                        >
-                                                                            ✏️
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => toggleEmployeeActive(employee.id)}
-                                                                            className={`text-xs px-2 py-1 rounded ${
-                                                                                employee.active 
-                                                                                    ? 'text-red-500 hover:text-red-700 bg-red-50'
-                                                                                    : 'text-green-500 hover:text-green-700 bg-green-50'
-                                                                            }`}
-                                                                            title={employee.active ? 'Désactiver' : 'Réactiver'}
-                                                                        >
-                                                                            {employee.active ? '❌' : '✅'}
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => resetPassword(employee.id)}
-                                                                            className="text-orange-500 hover:text-orange-700 text-xs px-2 py-1 bg-orange-50 rounded"
-                                                                            title="Réinitialiser le mot de passe"
-                                                                        >
-                                                                            🔐
-                                                                        </button>
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            {/* Statistiques détaillées */}
-                            <div className="mt-8 bg-white rounded-xl shadow-lg p-6">
-                                <h3 className="text-lg font-semibold mb-4">📊 Analyse des coûts de la main-d'œuvre</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <h4 className="font-medium mb-3">Répartition par rôle</h4>
-                                        <div className="space-y-2">
-                                            {[
-                                                {role: 'admin', label: 'Administrateurs', color: 'red'},
-                                                {role: 'employee', label: 'Employés', color: 'blue'}
-                                            ].map(({role, label, color}) => {
-                                                const count = employees.filter(emp => emp.role === role && emp.active).length;
-                                                const avgSalary = employees.filter(emp => emp.role === role && emp.active).length > 0 
-                                                    ? employees.filter(emp => emp.role === role && emp.active).reduce((sum, emp) => sum + emp.hourlyRate, 0) / employees.filter(emp => emp.role === role && emp.active).length
-                                                    : 0;
-                                                
-                                                return (
-                                                    <div key={role} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                                                        <span className="font-medium">{label}</span>
-                                                        <div className="text-right">
-                                                            <div className="font-bold">{count} personnes</div>
-                                                            <div className="text-sm text-gray-600">${avgSalary.toFixed(2)}/h moy.</div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                    
-                                    <div>
-                                        <h4 className="font-medium mb-3">Top performers cette semaine</h4>
-                                        <div className="space-y-2">
-                                            {employees
-                                                .filter(emp => emp.active)
-                                                .map(emp => {
-                                                    const weeklyHours = timeEntries
-                                                        .filter(entry => entry.employeeId === emp.id && isCurrentWeek(entry.date))
-                                                        .reduce((sum, entry) => sum + entry.hours, 0);
-                                                    return {...emp, weeklyHours};
-                                                })
-                                                .sort((a, b) => b.weeklyHours - a.weeklyHours)
-                                                .slice(0, 3)
-                                                .map((emp, index) => (
-                                                    <div key={emp.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                                                        <div className="flex items-center">
-                                                            <span className={`w-6 h-6 rounded-full text-xs flex items-center justify-center font-bold text-white mr-3 ${
-                                                                index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : 'bg-orange-400'
-                                                            }`}>
-                                                                {index + 1}
-                                                            </span>
-                                                            <span className="font-medium">{emp.name}</span>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <div className="font-bold">{emp.weeklyHours.toFixed(1)}h</div>
-                                                            <div className="text-sm text-gray-600">${(emp.weeklyHours * emp.hourlyRate).toFixed(2)}</div>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </main>
-
-                        {/* Modal d'ajout d'employé (mis à jour) */}
-                        {showAddEmployee && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                                <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
-                                    <h3 className="text-lg font-semibold mb-4">👤 Ajouter un nouvel employé</h3>
-                                    
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Nom complet *</label>
-                                            <input
-                                                type="text"
-                                                value={newEmployee.name}
-                                                onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})}
-                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                                placeholder="Ex: Marie Dubois"
-                                            />
-                                        </div>
-                                        
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                                            <input
-                                                type="email"
-                                                value={newEmployee.email}
-                                                onChange={(e) => setNewEmployee({...newEmployee, email: e.target.value})}
-                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                                placeholder="marie.dubois@entreprise.com"
-                                            />
-                                        </div>
-                                        
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Rôle *</label>
-                                            <select
-                                                value={newEmployee.role}
-                                                onChange={(e) => setNewEmployee({...newEmployee, role: e.target.value})}
-                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                            >
-                                                <option value="employee">👤 Employé</option>
-                                                <option value="admin">🔐 Administrateur</option>
-                                            </select>
-                                        </div>
-                                        
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Salaire horaire ($) *</label>
-                                            <input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                value={newEmployee.hourlyRate}
-                                                onChange={(e) => setNewEmployee({...newEmployee, hourlyRate: e.target.value})}
-                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                                placeholder="22.50"
-                                            />
-                                        </div>
-                                        
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Mot de passe temporaire *</label>
-                                            <input
-                                                type="text"
-                                                value={newEmployee.password}
-                                                onChange={(e) => setNewEmployee({...newEmployee, password: e.target.value})}
-                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                                placeholder="motdepasse123"
-                                            />
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="flex justify-end gap-3 mt-6">
-                                        <button
-                                            onClick={() => {
-                                                setShowAddEmployee(false);
-                                                setNewEmployee({ name: '', email: '', hourlyRate: '', password: '', role: 'employee' });
-                                            }}
-                                            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-                                        >
-                                            Annuler
-                                        </button>
-                                        <button
-                                            onClick={addEmployee}
-                                            className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg"
-                                        >
-                                            Ajouter l'employé
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                );
-            }
-            if (activeTab === 'reports' && currentUser.role === 'admin') {
-                return (
-                    <div className="min-h-screen bg-gray-100">
-                        <header className="bg-white shadow-sm border-b">
-                            <div className="max-w-7xl mx-auto px-4 py-4">
-                                <div className="flex justify-between items-center">
-                                    <div className="flex items-center">
-                                        <ClockIcon />
-                                        <h1 className="text-2xl font-bold text-gray-900 ml-3">Rapports Avancés</h1>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center text-sm text-gray-600">
-                                            <ShieldIcon />
-                                            <span className="font-medium ml-1">{currentUser.name}</span>
-                                            <span className="ml-2 text-xs bg-red-100 text-red-700 px-2 py-1 rounded">Admin</span>
-                                        </div>
-                                        <button
-                                            onClick={handleLogout}
-                                            className="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                                        >
-                                            <LogOutIcon />
-                                            <span className="ml-1">Déconnexion</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </header>
-
-                        <nav className="bg-white border-b">
-                            <div className="max-w-7xl mx-auto px-4">
-                                <div className="flex space-x-8">
-                                    <button
-                                        onClick={() => setActiveTab('dashboard')}
-                                        className="flex items-center px-4 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                                    >
-                                        <BarChartIcon />
-                                        <span className="ml-2">Tableau de bord</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('timeentry')}
-                                        className="flex items-center px-4 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                                    >
-                                        <ClockIcon />
-                                        <span className="ml-2">Saisie du temps</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('employees')}
-                                        className="flex items-center px-4 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                                    >
-                                        👥 <span className="ml-2">Gestion des employés</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('reports')}
-                                        className="flex items-center px-4 py-4 text-sm font-medium text-blue-600 border-b-2 border-blue-600"
-                                    >
-                                        📊 <span className="ml-2">Rapports avancés</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </nav>
-
-                        <main className="max-w-7xl mx-auto px-4 py-8">
-                            {/* Rapport détaillé par semaine et employé */}
-                            <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-                                <h3 className="text-lg font-semibold mb-4">👥 Détail par employé et par semaine</h3>
-                                
-                                {weeklyData.slice(0, 4).map((week, weekIndex) => (
-                                    <div key={week.weekStart} className="mb-8">
-                                        <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                                            <h4 className="font-semibold text-md">
-                                                📅 Semaine {week.weekNumber} ({week.weekStart} au {week.weekEnd})
-                                                {weekIndex === 0 && <span className="ml-2 text-blue-600 text-sm">(Semaine courante)</span>}
-                                            </h4>
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 text-sm">
-                                                <div>Total: <strong>{week.totalHours.toFixed(1)}h</strong></div>
-                                                <div>Production: <strong className="text-green-600">{week.totalProduction.toFixed(1)}h</strong></div>
-                                                <div>Autres: <strong className="text-orange-600">{week.totalOther.toFixed(1)}h</strong></div>
-                                                <div>Coût: <strong>${week.totalCost.toFixed(2)}</strong></div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-sm">
-                                                <thead>
-                                                    <tr className="bg-gray-100">
-                                                        <th className="text-left p-3 font-medium">Employé</th>
-                                                        <th className="text-left p-3 font-medium">Heures totales</th>
-                                                        <th className="text-left p-3 font-medium">Heures travaillées</th>
-                                                        <th className="text-left p-3 font-medium">Pauses</th>
-                                                        <th className="text-left p-3 font-medium">Production</th>
-                                                        <th className="text-left p-3 font-medium">Autres</th>
-                                                        <th className="text-left p-3 font-medium">Efficacité prod.</th>
-                                                        <th className="text-left p-3 font-medium">Quantité</th>
-                                                        <th className="text-left p-3 font-medium">Taux/h</th>
-                                                        <th className="text-left p-3 font-medium">Coût</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {Object.entries(week.employees).map(([empId, empData]) => {
-                                                        const productionPercent = empData.workHours > 0 ? (empData.productionHours / empData.workHours * 100) : 0;
-                                                        return (
-                                                            <tr key={empId} className="border-t">
-                                                                <td className="p-3 font-medium">{empData.name}</td>
-                                                                <td className="p-3">{empData.hours.toFixed(1)}h</td>
-                                                                <td className="p-3 font-bold text-blue-600">{empData.workHours.toFixed(1)}h</td>
-                                                                <td className="p-3 text-gray-500">{empData.pauseHours.toFixed(1)}h</td>
-                                                                <td className="p-3 text-green-600">{empData.productionHours.toFixed(1)}h</td>
-                                                                <td className="p-3 text-orange-600">{empData.otherHours.toFixed(1)}h</td>
-                                                                <td className="p-3">
-                                                                    <div className="flex items-center">
-                                                                        <div className="w-12 bg-gray-200 rounded-full h-2 mr-2">
-                                                                            <div 
-                                                                                className={`h-2 rounded-full ${productionPercent >= 80 ? 'bg-green-500' : productionPercent >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                                                                                style={{width: `${productionPercent}%`}}
-                                                                            ></div>
-                                                                        </div>
-                                                                        <span className="text-xs">{productionPercent.toFixed(0)}%</span>
-                                                                    </div>
-                                                                </td>
-                                                                <td className="p-3">{empData.quantity}</td>
-                                                                <td className="p-3">${empData.hourlyRate.toFixed(2)}</td>
-                                                                <td className="p-3 font-bold">${empData.cost.toFixed(2)}</td>
-                                                            </tr>
-                                                        );
-                                                    })}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Analyse des tendances */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <div className="bg-white rounded-xl shadow-lg p-6">
-                                    <h3 className="text-lg font-semibold mb-4">📈 Évolution de la productivité</h3>
-                                    <div className="space-y-3">
-                                        {weeklyData.slice(0, 6).map((week, index) => {
-                                            const prodPercent = week.totalWorkHours > 0 ? (week.totalProduction / week.totalWorkHours * 100) : 0;
-                                            const trend = index > 0 ? 
-                                                (prodPercent - (weeklyData[index - 1].totalWorkHours > 0 ? (weeklyData[index - 1].totalProduction / weeklyData[index - 1].totalWorkHours * 100) : 0)) : 0;
-                                            
-                                            return (
-                                                <div key={week.weekStart} className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                                                    <div>
-                                                        <div className="font-medium text-sm">Semaine {week.weekNumber}</div>
-                                                        <div className="text-xs text-gray-500">{week.weekStart}</div>
-                                                    </div>
-                                                    <div className="flex items-center">
-                                                        <div className="w-20 bg-gray-200 rounded-full h-3 mr-3">
-                                                            <div 
-                                                                className={`h-3 rounded-full ${prodPercent >= 80 ? 'bg-green-500' : prodPercent >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                                                                style={{width: `${prodPercent}%`}}
-                                                            ></div>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <div className="font-bold text-sm">{prodPercent.toFixed(1)}%</div>
-                                                            {index > 0 && (
-                                                                <div className={`text-xs ${trend > 0 ? 'text-green-600' : trend < 0 ? 'text-red-600' : 'text-gray-500'}`}>
-                                                                    {trend > 0 ? '↗' : trend < 0 ? '↘' : '→'} {Math.abs(trend).toFixed(1)}%
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                <div className="bg-white rounded-xl shadow-lg p-6">
-                                    <h3 className="text-lg font-semibold mb-4">💰 Coûts par semaine</h3>
-                                    <div className="space-y-3">
-                                        {weeklyData.slice(0, 6).map((week, index) => {
-                                            const costPerHour = week.totalHours > 0 ? (week.totalCost / week.totalHours) : 0;
-                                            const costTrend = index > 0 ? 
-                                                (week.totalCost - weeklyData[index - 1].totalCost) : 0;
-                                            
-                                            return (
-                                                <div key={week.weekStart} className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                                                    <div>
-                                                        <div className="font-medium text-sm">Semaine {week.weekNumber}</div>
-                                                        <div className="text-xs text-gray-500">{week.totalHours.toFixed(1)}h travaillées</div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <div className="font-bold">${week.totalCost.toFixed(2)}</div>
-                                                        <div className="text-xs text-gray-500">${costPerHour.toFixed(2)}/h</div>
-                                                        {index > 0 && (
-                                                            <div className={`text-xs ${costTrend > 0 ? 'text-red-600' : costTrend < 0 ? 'text-green-600' : 'text-gray-500'}`}>
-                                                                {costTrend > 0 ? '↗' : costTrend < 0 ? '↘' : '→'} ${Math.abs(costTrend).toFixed(2)}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-                        </main>
-                    </div>
-                );
-            }
+            // Interface principale - Dashboard simple
             return (
                 <div className="min-h-screen bg-gray-100">
                     <header className="bg-white shadow-sm border-b">
@@ -1815,420 +487,294 @@
                         </div>
                     </header>
 
-                    {currentUser.role === 'employee' && (
-                        <nav className="bg-white border-b">
-                            <div className="max-w-7xl mx-auto px-4">
-                                <div className="flex space-x-8">
-                                    <button
-                                        onClick={() => setActiveTab('dashboard')}
-                                        className={`flex items-center px-4 py-4 text-sm font-medium transition-colors ${
-                                            activeTab === 'dashboard' 
-                                                ? 'text-blue-600 border-b-2 border-blue-600'
-                                                : 'text-gray-500 hover:text-gray-700'
-                                        }`}
-                                    >
-                                        <BarChartIcon />
-                                        <span className="ml-2">Mon tableau de bord</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('timeentry')}
-                                        className={`flex items-center px-4 py-4 text-sm font-medium transition-colors ${
-                                            activeTab === 'timeentry' 
-                                                ? 'text-blue-600 border-b-2 border-blue-600'
-                                                : 'text-gray-500 hover:text-gray-700'
-                                        }`}
-                                    >
-                                        <ClockIcon />
-                                        <span className="ml-2">Saisir mon temps</span>
-                                    </button>
-                                </div>
+                    <nav className="bg-white border-b">
+                        <div className="max-w-7xl mx-auto px-4">
+                            <div className="flex space-x-8">
+                                <button
+                                    onClick={() => setActiveTab('dashboard')}
+                                    className={`flex items-center px-4 py-4 text-sm font-medium transition-colors ${
+                                        activeTab === 'dashboard' 
+                                            ? 'text-blue-600 border-b-2 border-blue-600'
+                                            : 'text-gray-500 hover:text-gray-700'
+                                    }`}
+                                >
+                                    <BarChartIcon />
+                                    <span className="ml-2">{currentUser.role === 'admin' ? 'Tableau de bord' : 'Mon tableau de bord'}</span>
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('timeentry')}
+                                    className={`flex items-center px-4 py-4 text-sm font-medium transition-colors ${
+                                        activeTab === 'timeentry' 
+                                            ? 'text-blue-600 border-b-2 border-blue-600'
+                                            : 'text-gray-500 hover:text-gray-700'
+                                    }`}
+                                >
+                                    <ClockIcon />
+                                    <span className="ml-2">{currentUser.role === 'admin' ? 'Saisie du temps' : 'Saisir mon temps'}</span>
+                                </button>
                             </div>
-                        </nav>
-                    )}
-
-                    {currentUser.role === 'admin' && (
-                        <nav className="bg-white border-b">
-                            <div className="max-w-7xl mx-auto px-4">
-                                <div className="flex space-x-8">
-                                    <button
-                                        onClick={() => setActiveTab('dashboard')}
-                                        className={`flex items-center px-4 py-4 text-sm font-medium transition-colors ${
-                                            activeTab === 'dashboard' 
-                                                ? 'text-blue-600 border-b-2 border-blue-600'
-                                                : 'text-gray-500 hover:text-gray-700'
-                                        }`}
-                                    >
-                                        <BarChartIcon />
-                                        <span className="ml-2">Tableau de bord</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('timeentry')}
-                                        className={`flex items-center px-4 py-4 text-sm font-medium transition-colors ${
-                                            activeTab === 'timeentry' 
-                                                ? 'text-blue-600 border-b-2 border-blue-600'
-                                                : 'text-gray-500 hover:text-gray-700'
-                                        }`}
-                                    >
-                                        <ClockIcon />
-                                        <span className="ml-2">Saisie du temps</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('employees')}
-                                        className={`flex items-center px-4 py-4 text-sm font-medium transition-colors ${
-                                            activeTab === 'employees' 
-                                                ? 'text-blue-600 border-b-2 border-blue-600'
-                                                : 'text-gray-500 hover:text-gray-700'
-                                        }`}
-                                    >
-                                        👥 <span className="ml-2">Gestion des employés</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('reports')}
-                                        className={`flex items-center px-4 py-4 text-sm font-medium transition-colors ${
-                                            activeTab === 'reports' 
-                                                ? 'text-blue-600 border-b-2 border-blue-600'
-                                                : 'text-gray-500 hover:text-gray-700'
-                                        }`}
-                                    >
-                                        📊 <span className="ml-2">Rapports avancés</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </nav>
-                    )}
+                        </div>
+                    </nav>
 
                     <main className="max-w-7xl mx-auto px-4 py-8">
-                        <div className="space-y-6">
-                            {currentUser.role !== 'admin' && (
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                    <div className="flex items-start">
-                                        <div className="flex-shrink-0">
-                                            <ClockIcon />
-                                        </div>
-                                        <div className="ml-3">
-                                            <h3 className="text-sm font-medium text-blue-800">
-                                                ℹ️ Règles de saisie du temps
-                                            </h3>
-                                            <div className="mt-2 text-sm text-blue-700">
-                                                <p>• Vous pouvez saisir et modifier vos heures uniquement pour la <strong>semaine courante</strong></p>
-                                                <p>• Les semaines précédentes sont automatiquement <strong>verrouillées</strong> 🔒</p>
-                                                <p>• Assurez-vous de finaliser vos heures avant la fin de chaque semaine</p>
+                        {activeTab === 'dashboard' && (
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg">
+                                        <h3 className="text-blue-100 text-sm">Heures travaillées aujourd'hui</h3>
+                                        <p className="text-2xl font-bold">{totalWorkHoursToday.toFixed(1)}h</p>
+                                    </div>
+                                    <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg">
+                                        <h3 className="text-green-100 text-sm">Heures cette semaine</h3>
+                                        <p className="text-2xl font-bold">{totalWorkHoursThisWeek.toFixed(1)}h</p>
+                                    </div>
+                                    <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
+                                        <h3 className="text-purple-100 text-sm">Employés actifs</h3>
+                                        <p className="text-2xl font-bold">{employees.filter(emp => emp.active).length}</p>
+                                    </div>
+                                </div>
+                                
+                                <div className="bg-white rounded-xl shadow-lg p-6">
+                                    <h3 className="text-lg font-semibold mb-4">📊 Résumé</h3>
+                                    <p className="text-gray-600">
+                                        Bienvenue dans TimeTracker Pro ! 
+                                        {currentUser.role === 'admin' 
+                                            ? ' Utilisez l\'onglet "Saisie du temps" pour gérer les heures de vos employés.'
+                                            : ' Utilisez l\'onglet "Saisir mon temps" pour enregistrer vos heures de travail.'
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'timeentry' && (
+                            <div className="space-y-6">
+                                {currentUser.role !== 'admin' && (
+                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                        <div className="flex items-start">
+                                            <div className="flex-shrink-0">
+                                                <ClockIcon />
+                                            </div>
+                                            <div className="ml-3">
+                                                <h3 className="text-sm font-medium text-blue-800">
+                                                    ℹ️ Règles de saisie du temps
+                                                </h3>
+                                                <div className="mt-2 text-sm text-blue-700">
+                                                    <p>• Vous pouvez saisir et modifier vos heures uniquement pour la <strong>semaine courante</strong></p>
+                                                    <p>• Les semaines précédentes sont automatiquement <strong>verrouillées</strong> 🔒</p>
+                                                    <p>• Les pauses ☕ ne comptent pas dans vos heures travaillées</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
-                            
-                            <div className="bg-white rounded-xl shadow-lg p-6">
-                                <h3 className="text-lg font-semibold mb-4">
-                                    {currentUser.role === 'admin' ? 'Nouvelle entrée de temps' : 'Saisir mon temps'}
-                                </h3>
+                                )}
                                 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {currentUser.role === 'admin' && (
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Employé *</label>
+                                <div className="bg-white rounded-xl shadow-lg p-6">
+                                    <h3 className="text-lg font-semibold mb-4">
+                                        {currentUser.role === 'admin' ? 'Nouvelle entrée de temps' : 'Saisir mon temps'}
+                                    </h3>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {currentUser.role === 'admin' && (
+                                            <div className="md:col-span-2">
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">Employé *</label>
+                                                <select
+                                                    value={newEntry.employeeId}
+                                                    onChange={(e) => setNewEntry({...newEntry, employeeId: e.target.value})}
+                                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                >
+                                                    <option value="">Sélectionner un employé</option>
+                                                    {employees.filter(emp => emp.active).map(emp => (
+                                                        <option key={emp.id} value={emp.id}>{emp.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
+                                        
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Date *</label>
+                                            <input
+                                                type="date"
+                                                value={newEntry.date}
+                                                onChange={(e) => setNewEntry({...newEntry, date: e.target.value})}
+                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            />
+                                        </div>
+                                        
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Tâche *</label>
                                             <select
-                                                value={newEntry.employeeId}
-                                                onChange={(e) => setNewEntry({...newEntry, employeeId: e.target.value})}
+                                                value={newEntry.task}
+                                                onChange={(e) => setNewEntry({...newEntry, task: e.target.value})}
                                                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                             >
-                                                <option value="">Sélectionner un employé</option>
-                                                {employees.filter(emp => emp.active).map(emp => (
-                                                    <option key={emp.id} value={emp.id}>{emp.name}</option>
+                                                {taskOptions.map(task => (
+                                                    <option key={task.value} value={task.value}>
+                                                        {task.label} {!task.countAsWork ? '☕ (pause)' : ''}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </div>
+                                    </div>
+
+                                    <div className="mt-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Horaires de travail *</label>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-gray-500 mb-1">Heure de début</label>
+                                                <input
+                                                    type="time"
+                                                    value={newEntry.startTime}
+                                                    onChange={(e) => setNewEntry({...newEntry, startTime: e.target.value})}
+                                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-gray-500 mb-1">Heure de fin</label>
+                                                <input
+                                                    type="time"
+                                                    value={newEntry.endTime}
+                                                    onChange={(e) => setNewEntry({...newEntry, endTime: e.target.value})}
+                                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Numéro de MO</label>
+                                            <input
+                                                type="text"
+                                                placeholder="Ex: MO-2025-001"
+                                                value={newEntry.moNumber}
+                                                onChange={(e) => setNewEntry({...newEntry, moNumber: e.target.value})}
+                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            />
+                                        </div>
+                                        
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Quantité réalisée</label>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                placeholder="Ex: 15"
+                                                value={newEntry.quantity}
+                                                onChange={(e) => setNewEntry({...newEntry, quantity: e.target.value})}
+                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {newEntry.startTime && newEntry.endTime && (
+                                        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                                            <p className="text-sm text-blue-800">
+                                                <strong>⏱️ Durée calculée: {calculateHours(newEntry.startTime, newEntry.endTime).toFixed(1)} heures</strong>
+                                            </p>
+                                            {newEntry.task === 'pause' && (
+                                                <p className="text-xs text-orange-700 mt-1">
+                                                    ☕ Note: Les pauses ne comptent pas dans vos heures travaillées
+                                                </p>
+                                            )}
+                                        </div>
                                     )}
                                     
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Date *</label>
-                                        <input
-                                            type="date"
-                                            value={newEntry.date}
-                                            onChange={(e) => setNewEntry({...newEntry, date: e.target.value})}
+                                    <div className="mt-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Commentaires</label>
+                                        <textarea
+                                            placeholder="Problème de production, éléments à communiquer,..."
+                                            value={newEntry.comments}
+                                            onChange={(e) => setNewEntry({...newEntry, comments: e.target.value})}
                                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            rows="3"
                                         />
                                     </div>
                                     
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Tâche *</label>
-                                        <select
-                                            value={newEntry.task}
-                                            onChange={(e) => setNewEntry({...newEntry, task: e.target.value})}
-                                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        >
-                                            {taskOptions.map(task => (
-                                                <option key={task.value} value={task.value}>
-                                                    {task.label} {!task.countAsWork ? '☕ (pause)' : ''}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="mt-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Horaires de travail *</label>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-xs text-gray-500 mb-1">Heure de début</label>
-                                            <input
-                                                type="time"
-                                                value={newEntry.startTime}
-                                                onChange={(e) => setNewEntry({...newEntry, startTime: e.target.value})}
-                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs text-gray-500 mb-1">Heure de fin</label>
-                                            <input
-                                                type="time"
-                                                value={newEntry.endTime}
-                                                onChange={(e) => setNewEntry({...newEntry, endTime: e.target.value})}
-                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Numéro de MO</label>
-                                        <input
-                                            type="text"
-                                            placeholder="Ex: MO-2025-001"
-                                            value={newEntry.moNumber}
-                                            onChange={(e) => setNewEntry({...newEntry, moNumber: e.target.value})}
-                                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        />
-                                    </div>
-                                    
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Quantité réalisée</label>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            placeholder="Ex: 15"
-                                            value={newEntry.quantity}
-                                            onChange={(e) => setNewEntry({...newEntry, quantity: e.target.value})}
-                                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        />
-                                    </div>
+                                    <button
+                                        onClick={addTimeEntry}
+                                        className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                                    >
+                                        <PlusIcon />
+                                        Enregistrer l'entrée
+                                    </button>
                                 </div>
                                 
-                                {newEntry.startTime && newEntry.endTime && (
-                                    <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                                        <p className="text-sm text-blue-800">
-                                            <strong>⏱️ Durée calculée: {calculateHours(newEntry.startTime, newEntry.endTime).toFixed(1)} heures</strong>
-                                        </p>
-                                        {newEntry.task === 'pause' && (
-                                            <p className="text-xs text-orange-700 mt-1">
-                                                ☕ Note: Les pauses ne comptent pas dans vos heures travaillées
-                                            </p>
-                                        )}
-                                    </div>
-                                )}
-                                
-                                <div className="mt-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Commentaires</label>
-                                    <textarea
-                                        placeholder="Problème de production, éléments à communiquer,..."
-                                        value={newEntry.comments}
-                                        onChange={(e) => setNewEntry({...newEntry, comments: e.target.value})}
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        rows="3"
-                                    />
-                                </div>
-                                
-                                <button
-                                    onClick={addTimeEntry}
-                                    className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
-                                >
-                                    <PlusIcon />
-                                    Enregistrer l'entrée
-                                </button>
-                            </div>
-                            
-                            <div className="bg-white rounded-xl shadow-lg p-6">
-                                <h3 className="text-lg font-semibold mb-4">
-                                    {currentUser.role === 'admin' ? 'Toutes les entrées' : 'Mes entrées de temps'}
-                                </h3>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm">
-                                        <thead>
-                                            <tr className="bg-gray-50">
-                                                {currentUser.role === 'admin' && <th className="text-left p-3 font-medium">Employé</th>}
-                                                <th className="text-left p-3 font-medium">Date</th>
-                                                <th className="text-left p-3 font-medium">Horaire</th>
-                                                <th className="text-left p-3 font-medium">Heures</th>
-                                                <th className="text-left p-3 font-medium">Tâche</th>
-                                                <th className="text-left p-3 font-medium">MO</th>
-                                                <th className="text-left p-3 font-medium">Quantité</th>
-                                                <th className="text-left p-3 font-medium">Commentaires</th>
-                                                <th className="text-left p-3 font-medium">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {getFilteredTimeEntries().slice(-10).reverse().map(entry => {
-                                                const taskInfo = taskOptions.find(t => t.value === entry.task);
-                                                const isPause = taskInfo && !taskInfo.countAsWork;
-                                                
-                                                return (
-                                                <tr key={entry.id} className={`border-t ${isPause ? 'bg-gray-50 opacity-75' : ''}`}>
-                                                    {currentUser.role === 'admin' && <td className="p-3">{getEmployeeName(entry.employeeId)}</td>}
-                                                    <td className="p-3">
-                                                        {editingEntry && editingEntry.id === entry.id ? (
-                                                            <input
-                                                                type="date"
-                                                                value={editingEntry.date}
-                                                                onChange={(e) => setEditingEntry({...editingEntry, date: e.target.value})}
-                                                                className="w-full p-1 text-sm border rounded"
-                                                            />
-                                                        ) : (
-                                                            entry.date
-                                                        )}
-                                                    </td>
-                                                    <td className="p-3">
-                                                        {editingEntry && editingEntry.id === entry.id ? (
-                                                            <div className="flex gap-1">
-                                                                <input
-                                                                    type="time"
-                                                                    value={editingEntry.startTime}
-                                                                    onChange={(e) => setEditingEntry({...editingEntry, startTime: e.target.value})}
-                                                                    className="w-20 p-1 text-xs border rounded"
-                                                                />
-                                                                <span>-</span>
-                                                                <input
-                                                                    type="time"
-                                                                    value={editingEntry.endTime}
-                                                                    onChange={(e) => setEditingEntry({...editingEntry, endTime: e.target.value})}
-                                                                    className="w-20 p-1 text-xs border rounded"
-                                                                />
-                                                            </div>
-                                                        ) : (
-                                                            `${entry.startTime} - ${entry.endTime}`
-                                                        )}
-                                                    </td>
-                                                    <td className={`p-3 font-medium ${isPause ? 'text-gray-500' : ''}`}>
-                                                        {editingEntry && editingEntry.id === entry.id 
-                                                            ? `${calculateHours(editingEntry.startTime, editingEntry.endTime).toFixed(1)}h`
-                                                            : `${entry.hours.toFixed(1)}h`
-                                                        }
-                                                        {isPause && <span className="text-xs ml-1">(pause)</span>}
-                                                    </td>
-                                                    <td className="p-3">
-                                                        {editingEntry && editingEntry.id === entry.id ? (
-                                                            <select
-                                                                value={editingEntry.task}
-                                                                onChange={(e) => setEditingEntry({...editingEntry, task: e.target.value})}
-                                                                className="w-full p-1 text-sm border rounded"
-                                                            >
-                                                                {taskOptions.map(task => (
-                                                                    <option key={task.value} value={task.value}>
-                                                                        {task.label} {!task.countAsWork ? '(pause)' : ''}
-                                                                    </option>
-                                                                ))}
-                                                            </select>
-                                                        ) : (
+                                <div className="bg-white rounded-xl shadow-lg p-6">
+                                    <h3 className="text-lg font-semibold mb-4">
+                                        {currentUser.role === 'admin' ? 'Toutes les entrées' : 'Mes entrées de temps'}
+                                    </h3>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm">
+                                            <thead>
+                                                <tr className="bg-gray-50">
+                                                    {currentUser.role === 'admin' && <th className="text-left p-3 font-medium">Employé</th>}
+                                                    <th className="text-left p-3 font-medium">Date</th>
+                                                    <th className="text-left p-3 font-medium">Horaire</th>
+                                                    <th className="text-left p-3 font-medium">Heures</th>
+                                                    <th className="text-left p-3 font-medium">Tâche</th>
+                                                    <th className="text-left p-3 font-medium">MO</th>
+                                                    <th className="text-left p-3 font-medium">Quantité</th>
+                                                    <th className="text-left p-3 font-medium">Commentaires</th>
+                                                    <th className="text-left p-3 font-medium">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {getFilteredTimeEntries().slice(-10).reverse().map(entry => {
+                                                    const taskInfo = taskOptions.find(t => t.value === entry.task);
+                                                    const isPause = taskInfo && !taskInfo.countAsWork;
+                                                    
+                                                    return (
+                                                    <tr key={entry.id} className={`border-t ${isPause ? 'bg-gray-50 opacity-75' : ''}`}>
+                                                        {currentUser.role === 'admin' && <td className="p-3">{getEmployeeName(entry.employeeId)}</td>}
+                                                        <td className="p-3">{entry.date}</td>
+                                                        <td className="p-3">{entry.startTime} - {entry.endTime}</td>
+                                                        <td className={`p-3 font-medium ${isPause ? 'text-gray-500' : ''}`}>
+                                                            {entry.hours.toFixed(1)}h
+                                                            {isPause && <span className="text-xs ml-1">(pause)</span>}
+                                                        </td>
+                                                        <td className="p-3">
                                                             <span className={isPause ? 'text-gray-500' : ''}>
                                                                 {getTaskLabel(entry.task)}
                                                                 {isPause && ' ☕'}
                                                             </span>
-                                                        )}
-                                                    </td>
-                                                    <td className="p-3">
-                                                        {editingEntry && editingEntry.id === entry.id ? (
-                                                            <input
-                                                                type="text"
-                                                                value={editingEntry.moNumber}
-                                                                onChange={(e) => setEditingEntry({...editingEntry, moNumber: e.target.value})}
-                                                                className="w-full p-1 text-sm border rounded"
-                                                                placeholder="MO-XXX"
-                                                            />
-                                                        ) : (
-                                                            entry.moNumber || '-'
-                                                        )}
-                                                    </td>
-                                                    <td className="p-3">
-                                                        {editingEntry && editingEntry.id === entry.id ? (
-                                                            <input
-                                                                type="number"
-                                                                min="0"
-                                                                value={editingEntry.quantity}
-                                                                onChange={(e) => setEditingEntry({...editingEntry, quantity: e.target.value})}
-                                                                className="w-20 p-1 text-sm border rounded"
-                                                            />
-                                                        ) : (
-                                                            entry.quantity || '-'
-                                                        )}
-                                                    </td>
-                                                    <td className="p-3 max-w-xs">
-                                                        {editingEntry && editingEntry.id === entry.id ? (
-                                                            <textarea
-                                                                value={editingEntry.comments}
-                                                                onChange={(e) => setEditingEntry({...editingEntry, comments: e.target.value})}
-                                                                className="w-full p-1 text-sm border rounded"
-                                                                rows="2"
-                                                                placeholder="Problème de production..."
-                                                            />
-                                                        ) : (
-                                                            <span className="block truncate" title={entry.comments}>
-                                                                {entry.comments || '-'}
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                    <td className="p-3">
-                                                        <div className="flex gap-1">
-                                                            {editingEntry && editingEntry.id === entry.id ? (
-                                                                <>
+                                                        </td>
+                                                        <td className="p-3">{entry.moNumber || '-'}</td>
+                                                        <td className="p-3">{entry.quantity || '-'}</td>
+                                                        <td className="p-3 max-w-xs truncate">{entry.comments || '-'}</td>
+                                                        <td className="p-3">
+                                                            <div className="flex gap-1">
+                                                                {canEditEntry(entry, currentUser) ? (
                                                                     <button
-                                                                        onClick={saveEdit}
-                                                                        className="text-green-600 hover:text-green-800 text-xs px-2 py-1 bg-green-50 rounded"
+                                                                        onClick={() => startEditing(entry)}
+                                                                        className="text-blue-500 hover:text-blue-700 text-xs px-2 py-1 bg-blue-50 rounded"
                                                                     >
-                                                                        ✓ Sauver
+                                                                        ✏️ Modifier
                                                                     </button>
+                                                                ) : (
+                                                                    currentUser.role !== 'admin' && (
+                                                                        <span className="text-gray-400 text-xs px-2 py-1 bg-gray-100 rounded" title="Semaine fermée">
+                                                                            🔒 Fermé
+                                                                        </span>
+                                                                    )
+                                                                )}
+                                                                {currentUser.role === 'admin' && (
                                                                     <button
-                                                                        onClick={cancelEdit}
-                                                                        className="text-gray-600 hover:text-gray-800 text-xs px-2 py-1 bg-gray-50 rounded"
+                                                                        onClick={() => deleteTimeEntry(entry.id)}
+                                                                        className="text-red-500 hover:text-red-700 transition-colors p-1"
                                                                     >
-                                                                        ✗ Annuler
+                                                                        <TrashIcon />
                                                                     </button>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    {canEditEntry(entry, currentUser) ? (
-                                                                        <button
-                                                                            onClick={() => startEditing(entry)}
-                                                                            className="text-blue-500 hover:text-blue-700 text-xs px-2 py-1 bg-blue-50 rounded"
-                                                                        >
-                                                                            ✏️ Modifier
-                                                                        </button>
-                                                                    ) : (
-                                                                        currentUser.role !== 'admin' && (
-                                                                            <span className="text-gray-400 text-xs px-2 py-1 bg-gray-100 rounded" title="Semaine fermée - modification impossible">
-                                                                                🔒 Fermé
-                                                                            </span>
-                                                                        )
-                                                                    )}
-                                                                    {currentUser.role === 'admin' && (
-                                                                        <button
-                                                                            onClick={() => deleteTimeEntry(entry.id)}
-                                                                            className="text-red-500 hover:text-red-700 transition-colors p-1"
-                                                                        >
-                                                                            <TrashIcon />
-                                                                        </button>
-                                                                    )}
-                                                                </>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            )})}}
-                                        </tbody>
-                                    </table>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )})}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
                     </main>
                 </div>
             );
