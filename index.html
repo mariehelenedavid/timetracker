@@ -4,37 +4,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TimeTracker Pro</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
             margin: 0;
+            padding: 0;
+        }
+        #root {
+            min-height: 100vh;
+        }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-size: 18px;
+            color: #666;
         }
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root">
+        <div class="loading">🕐 Chargement de TimeTracker Pro...</div>
+    </div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // Icônes simples en SVG
-        const ClockIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>;
-        const PlusIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
-        const TrashIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3,6 5,6 21,6"/><path d="m19,6v14a2,2 0 0,1-2,2H7a2,2 0 0,1-2-2V6m3,0V4a2,2 0 0,1,2-2h4a2,2 0 0,1,2,2v2"/></svg>;
-        const LogOutIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9,21h5a2,2 0 0,0,2-2V5a2,2 0 0,0-2-2H9"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>;
-        const UserIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
-        const ShieldIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
-        const BarChartIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>;
+        // Icônes SVG simples
+        const ClockIcon = () => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12,6 12,12 16,14"/>
+            </svg>
+        );
+
+        const PlusIcon = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+        );
+
+        const TrashIcon = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="3,6 5,6 21,6"/>
+                <path d="m19,6v14a2,2 0 0,1-2,2H7a2,2 0 0,1-2-2V6m3,0V4a2,2 0 0,1,2-2h4a2,2 0 0,1,2,2v2"/>
+            </svg>
+        );
+
+        const LogOutIcon = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="m9,21h5a2,2 0 0,0,2-2V5a2,2 0 0,0-2-2H9"/>
+                <polyline points="16,17 21,12 16,7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+        );
+
+        const UserIcon = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
+        );
+
+        const ShieldIcon = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+        );
+
+        const BarChartIcon = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="20" x2="12" y2="10"/>
+                <line x1="18" y1="20" x2="18" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="16"/>
+            </svg>
+        );
 
         const TimeTrackingApp = () => {
             const [currentUser, setCurrentUser] = useState(null);
             const [loginForm, setLoginForm] = useState({ email: '', password: '' });
             const [loginError, setLoginError] = useState('');
 
+            // Données des utilisateurs
             const users = [
                 { id: 1, name: 'Marie Dubois', email: 'marie.dubois@entreprise.com', password: 'marie123', role: 'employee' },
                 { id: 2, name: 'Pierre Martin', email: 'pierre.martin@entreprise.com', password: 'pierre123', role: 'employee' },
@@ -58,41 +115,39 @@
                 { 
                     id: 1, 
                     employeeId: 1, 
-                    projectId: 1, 
                     date: '2025-09-01', 
                     startTime: '08:00',
                     endTime: '16:30',
                     hours: 8.5, 
                     task: 'production',
                     moNumber: 'MO-2025-001',
-                    quantity: '15',
+                    quantity: 15,
                     comments: 'Développement du module de paiement'
                 },
                 { 
                     id: 2, 
                     employeeId: 2, 
-                    projectId: 1, 
                     date: '2025-09-01', 
                     startTime: '09:00',
                     endTime: '13:00',
                     hours: 4.0, 
                     task: 'entretien',
                     moNumber: '',
-                    quantity: '',
+                    quantity: 0,
                     comments: 'Configuration serveur de production'
                 }
             ]);
 
             const [activeTab, setActiveTab] = useState('timeentry');
+            const [editingEntry, setEditingEntry] = useState(null);
             const [newEntry, setNewEntry] = useState({
                 employeeId: '',
-                projectId: '',
                 date: new Date().toISOString().split('T')[0],
                 startTime: '',
                 endTime: '',
                 task: 'production',
                 moNumber: '',
-                quantity: '',
+                quantity: 0,
                 comments: ''
             });
 
@@ -104,6 +159,7 @@
                 { value: 'autres', label: 'Autres' }
             ];
 
+            // Fonction de connexion
             const handleLogin = (e) => {
                 e.preventDefault();
                 setLoginError('');
@@ -123,12 +179,14 @@
                 }
             };
 
+            // Fonction de déconnexion
             const handleLogout = () => {
                 setCurrentUser(null);
                 setLoginForm({ email: '', password: '' });
                 setActiveTab('timeentry');
             };
 
+            // Calculer les heures entre deux temps
             const calculateHours = (startTime, endTime) => {
                 if (!startTime || !endTime) return 0;
                 const start = new Date(`2000-01-01T${startTime}`);
@@ -137,15 +195,17 @@
                 return Math.max(0, diff);
             };
 
+            // Mettre à jour les heures automatiquement
             useEffect(() => {
                 const hours = calculateHours(newEntry.startTime, newEntry.endTime);
                 setNewEntry(prev => ({ ...prev, hours }));
             }, [newEntry.startTime, newEntry.endTime]);
 
+            // Fonctions utilitaires
             const getEmployeeName = (id) => employees.find(emp => emp.id === id)?.name || 'Inconnu';
-            const getProjectName = (id) => projects.find(proj => proj.id === id)?.name || 'Inconnu';
             const getTaskLabel = (value) => taskOptions.find(task => task.value === value)?.label || value;
 
+            // Filtrer les données selon le rôle
             const getFilteredTimeEntries = () => {
                 if (currentUser?.role === 'admin') {
                     return timeEntries;
@@ -153,8 +213,9 @@
                 return timeEntries.filter(entry => entry.employeeId === currentUser?.id);
             };
 
+            // Ajouter une nouvelle entrée
             const addTimeEntry = () => {
-                if (newEntry.projectId && newEntry.startTime && newEntry.endTime) {
+                if (newEntry.startTime && newEntry.endTime) {
                     const employeeId = currentUser.role === 'admin' ? parseInt(newEntry.employeeId) : currentUser.id;
                     const hours = calculateHours(newEntry.startTime, newEntry.endTime);
                     
@@ -166,41 +227,71 @@
                     const entry = {
                         id: Date.now(),
                         employeeId,
-                        projectId: parseInt(newEntry.projectId),
                         date: newEntry.date,
                         startTime: newEntry.startTime,
                         endTime: newEntry.endTime,
                         hours,
                         task: newEntry.task,
                         moNumber: newEntry.moNumber,
-                        quantity: newEntry.quantity,
+                        quantity: parseInt(newEntry.quantity) || 0,
                         comments: newEntry.comments
                     };
                     
                     setTimeEntries([...timeEntries, entry]);
                     setNewEntry({
                         employeeId: currentUser.role === 'admin' ? '' : currentUser.id,
-                        projectId: '',
                         date: new Date().toISOString().split('T')[0],
                         startTime: '',
                         endTime: '',
                         task: 'production',
                         moNumber: '',
-                        quantity: '',
+                        quantity: 0,
                         comments: ''
                     });
-                    alert('Entrée enregistrée avec succès !');
+                    alert('✅ Entrée enregistrée avec succès !');
                 } else {
-                    alert('Veuillez remplir tous les champs obligatoires (projet, heure début, heure fin)');
+                    alert('⚠️ Veuillez remplir les heures de début et de fin');
                 }
             };
 
+            // Commencer l'édition d'une entrée
+            const startEditing = (entry) => {
+                setEditingEntry({...entry});
+            };
+
+            // Sauvegarder les modifications
+            const saveEdit = () => {
+                const hours = calculateHours(editingEntry.startTime, editingEntry.endTime);
+                
+                if (hours <= 0) {
+                    alert('L\'heure de fin doit être après l\'heure de début');
+                    return;
+                }
+
+                const updatedEntries = timeEntries.map(entry => 
+                    entry.id === editingEntry.id 
+                        ? {...editingEntry, hours, quantity: parseInt(editingEntry.quantity) || 0}
+                        : entry
+                );
+                
+                setTimeEntries(updatedEntries);
+                setEditingEntry(null);
+                alert('✅ Modifications sauvegardées !');
+            };
+
+            // Annuler l'édition
+            const cancelEdit = () => {
+                setEditingEntry(null);
+            };
+
+            // Supprimer une entrée (admin seulement)
             const deleteTimeEntry = (id) => {
                 if (currentUser?.role === 'admin' && confirm('Êtes-vous sûr de vouloir supprimer cette entrée ?')) {
                     setTimeEntries(timeEntries.filter(entry => entry.id !== id));
                 }
             };
 
+            // Calculs pour le dashboard
             const totalHoursToday = timeEntries
                 .filter(entry => entry.date === new Date().toISOString().split('T')[0])
                 .reduce((sum, entry) => sum + entry.hours, 0);
@@ -208,12 +299,9 @@
             const totalHoursThisWeek = timeEntries
                 .reduce((sum, entry) => sum + entry.hours, 0);
 
-            const projectHours = projects.map(project => ({
-                ...project,
-                totalHours: timeEntries
-                    .filter(entry => entry.projectId === project.id)
-                    .reduce((sum, entry) => sum + entry.hours, 0)
-            }));
+            const totalQuantityToday = timeEntries
+                .filter(entry => entry.date === new Date().toISOString().split('T')[0])
+                .reduce((sum, entry) => sum + (entry.quantity || 0), 0);
 
             // Écran de connexion
             if (!currentUser) {
@@ -288,13 +376,16 @@
                                         <div className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">admin123</div>
                                     </div>
                                 </div>
+                                <div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-700">
+                                    <strong>💡 Astuce :</strong> Cliquez sur un compte ci-dessus pour le tester !
+                                </div>
                             </div>
                         </div>
                     </div>
                 );
             }
 
-            // Dashboard (admin seulement)
+            // Dashboard (admin seulement)  
             if (activeTab === 'dashboard' && currentUser.role === 'admin') {
                 return (
                     <div className="min-h-screen bg-gray-100">
@@ -309,7 +400,7 @@
                                         <div className="flex items-center text-sm text-gray-600">
                                             <ShieldIcon />
                                             <span className="font-medium ml-1">{currentUser.name}</span>
-                                            <span className="ml-2 text-xs bg-red-100 px-2 py-1 rounded">Admin</span>
+                                            <span className="ml-2 text-xs bg-red-100 text-red-700 px-2 py-1 rounded">Admin</span>
                                         </div>
                                         <button
                                             onClick={handleLogout}
@@ -355,26 +446,35 @@
                                     <p className="text-2xl font-bold">{totalHoursThisWeek.toFixed(1)}h</p>
                                 </div>
                                 <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
-                                    <h3 className="text-purple-100 text-sm">Employés actifs</h3>
-                                    <p className="text-2xl font-bold">{employees.length}</p>
+                                    <h3 className="text-purple-100 text-sm">Quantité aujourd'hui</h3>
+                                    <p className="text-2xl font-bold">{totalQuantityToday}</p>
                                 </div>
                             </div>
 
                             <div className="bg-white rounded-xl shadow-lg p-6">
-                                <h3 className="text-lg font-semibold mb-4">Heures par projet</h3>
+                                <h3 className="text-lg font-semibold mb-4">Résumé par employé</h3>
                                 <div className="space-y-3">
-                                    {projectHours.map(project => (
-                                        <div key={project.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                            <div>
-                                                <h4 className="font-medium">{project.name}</h4>
-                                                <p className="text-sm text-gray-600">{project.description}</p>
+                                    {employees.map(employee => {
+                                        const employeeHours = timeEntries
+                                            .filter(entry => entry.employeeId === employee.id)
+                                            .reduce((sum, entry) => sum + entry.hours, 0);
+                                        const employeeQuantity = timeEntries
+                                            .filter(entry => entry.employeeId === employee.id)
+                                            .reduce((sum, entry) => sum + (entry.quantity || 0), 0);
+                                        
+                                        return (
+                                            <div key={employee.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                                <div>
+                                                    <h4 className="font-medium">{employee.name}</h4>
+                                                    <p className="text-sm text-gray-600">{employee.email}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="font-bold text-lg">{employeeHours.toFixed(1)}h</p>
+                                                    <p className="text-sm text-gray-500">{employeeQuantity} unités</p>
+                                                </div>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="font-bold text-lg">{project.totalHours.toFixed(1)}h</p>
-                                                <p className="text-sm text-gray-500">total</p>
-                                            </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </main>
@@ -444,7 +544,7 @@
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {currentUser.role === 'admin' && (
-                                        <div>
+                                        <div className="md:col-span-2">
                                             <label className="block text-sm font-medium text-gray-700 mb-2">Employé *</label>
                                             <select
                                                 value={newEntry.employeeId}
@@ -458,20 +558,6 @@
                                             </select>
                                         </div>
                                     )}
-                                    
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Projet *</label>
-                                        <select
-                                            value={newEntry.projectId}
-                                            onChange={(e) => setNewEntry({...newEntry, projectId: e.target.value})}
-                                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        >
-                                            <option value="">Sélectionner un projet</option>
-                                            {projects.map(proj => (
-                                                <option key={proj.id} value={proj.id}>{proj.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
                                     
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">Date *</label>
@@ -495,27 +581,33 @@
                                             ))}
                                         </select>
                                     </div>
-                                    
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Heure de début *</label>
-                                        <input
-                                            type="time"
-                                            value={newEntry.startTime}
-                                            onChange={(e) => setNewEntry({...newEntry, startTime: e.target.value})}
-                                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        />
+                                </div>
+
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Horaires de travail *</label>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-gray-500 mb-1">Heure de début</label>
+                                            <input
+                                                type="time"
+                                                value={newEntry.startTime}
+                                                onChange={(e) => setNewEntry({...newEntry, startTime: e.target.value})}
+                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-gray-500 mb-1">Heure de fin</label>
+                                            <input
+                                                type="time"
+                                                value={newEntry.endTime}
+                                                onChange={(e) => setNewEntry({...newEntry, endTime: e.target.value})}
+                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            />
+                                        </div>
                                     </div>
-                                    
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Heure de fin *</label>
-                                        <input
-                                            type="time"
-                                            value={newEntry.endTime}
-                                            onChange={(e) => setNewEntry({...newEntry, endTime: e.target.value})}
-                                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        />
-                                    </div>
-                                    
+                                </div>
+
+                                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">Numéro de MO</label>
                                         <input
@@ -530,8 +622,9 @@
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">Quantité réalisée</label>
                                         <input
-                                            type="text"
-                                            placeholder="Ex: 15 unités"
+                                            type="number"
+                                            min="0"
+                                            placeholder="Ex: 15"
                                             value={newEntry.quantity}
                                             onChange={(e) => setNewEntry({...newEntry, quantity: e.target.value})}
                                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -550,7 +643,7 @@
                                 <div className="mt-4">
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Commentaires</label>
                                     <textarea
-                                        placeholder="Décrivez le travail effectué..."
+                                        placeholder="Problème de production, éléments à communiquer,..."
                                         value={newEntry.comments}
                                         onChange={(e) => setNewEntry({...newEntry, comments: e.target.value})}
                                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -576,7 +669,6 @@
                                         <thead>
                                             <tr className="bg-gray-50">
                                                 {currentUser.role === 'admin' && <th className="text-left p-3 font-medium">Employé</th>}
-                                                <th className="text-left p-3 font-medium">Projet</th>
                                                 <th className="text-left p-3 font-medium">Date</th>
                                                 <th className="text-left p-3 font-medium">Horaire</th>
                                                 <th className="text-left p-3 font-medium">Heures</th>
@@ -584,31 +676,147 @@
                                                 <th className="text-left p-3 font-medium">MO</th>
                                                 <th className="text-left p-3 font-medium">Quantité</th>
                                                 <th className="text-left p-3 font-medium">Commentaires</th>
-                                                {currentUser.role === 'admin' && <th className="text-left p-3 font-medium">Actions</th>}
+                                                <th className="text-left p-3 font-medium">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {getFilteredTimeEntries().slice(-10).reverse().map(entry => (
                                                 <tr key={entry.id} className="border-t">
                                                     {currentUser.role === 'admin' && <td className="p-3">{getEmployeeName(entry.employeeId)}</td>}
-                                                    <td className="p-3">{getProjectName(entry.projectId)}</td>
-                                                    <td className="p-3">{entry.date}</td>
-                                                    <td className="p-3">{entry.startTime} - {entry.endTime}</td>
-                                                    <td className="p-3 font-medium">{entry.hours.toFixed(1)}h</td>
-                                                    <td className="p-3">{getTaskLabel(entry.task)}</td>
-                                                    <td className="p-3">{entry.moNumber || '-'}</td>
-                                                    <td className="p-3">{entry.quantity || '-'}</td>
-                                                    <td className="p-3">{entry.comments || '-'}</td>
-                                                    {currentUser.role === 'admin' && (
-                                                        <td className="p-3">
-                                                            <button
-                                                                onClick={() => deleteTimeEntry(entry.id)}
-                                                                className="text-red-500 hover:text-red-700 transition-colors p-1"
+                                                    <td className="p-3">
+                                                        {editingEntry && editingEntry.id === entry.id ? (
+                                                            <input
+                                                                type="date"
+                                                                value={editingEntry.date}
+                                                                onChange={(e) => setEditingEntry({...editingEntry, date: e.target.value})}
+                                                                className="w-full p-1 text-sm border rounded"
+                                                            />
+                                                        ) : (
+                                                            entry.date
+                                                        )}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        {editingEntry && editingEntry.id === entry.id ? (
+                                                            <div className="flex gap-1">
+                                                                <input
+                                                                    type="time"
+                                                                    value={editingEntry.startTime}
+                                                                    onChange={(e) => setEditingEntry({...editingEntry, startTime: e.target.value})}
+                                                                    className="w-20 p-1 text-xs border rounded"
+                                                                />
+                                                                <span>-</span>
+                                                                <input
+                                                                    type="time"
+                                                                    value={editingEntry.endTime}
+                                                                    onChange={(e) => setEditingEntry({...editingEntry, endTime: e.target.value})}
+                                                                    className="w-20 p-1 text-xs border rounded"
+                                                                />
+                                                            </div>
+                                                        ) : (
+                                                            `${entry.startTime} - ${entry.endTime}`
+                                                        )}
+                                                    </td>
+                                                    <td className="p-3 font-medium">
+                                                        {editingEntry && editingEntry.id === entry.id 
+                                                            ? `${calculateHours(editingEntry.startTime, editingEntry.endTime).toFixed(1)}h`
+                                                            : `${entry.hours.toFixed(1)}h`
+                                                        }
+                                                    </td>
+                                                    <td className="p-3">
+                                                        {editingEntry && editingEntry.id === entry.id ? (
+                                                            <select
+                                                                value={editingEntry.task}
+                                                                onChange={(e) => setEditingEntry({...editingEntry, task: e.target.value})}
+                                                                className="w-full p-1 text-sm border rounded"
                                                             >
-                                                                <TrashIcon />
-                                                            </button>
-                                                        </td>
-                                                    )}
+                                                                {taskOptions.map(task => (
+                                                                    <option key={task.value} value={task.value}>{task.label}</option>
+                                                                ))}
+                                                            </select>
+                                                        ) : (
+                                                            getTaskLabel(entry.task)
+                                                        )}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        {editingEntry && editingEntry.id === entry.id ? (
+                                                            <input
+                                                                type="text"
+                                                                value={editingEntry.moNumber}
+                                                                onChange={(e) => setEditingEntry({...editingEntry, moNumber: e.target.value})}
+                                                                className="w-full p-1 text-sm border rounded"
+                                                                placeholder="MO-XXX"
+                                                            />
+                                                        ) : (
+                                                            entry.moNumber || '-'
+                                                        )}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        {editingEntry && editingEntry.id === entry.id ? (
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                value={editingEntry.quantity}
+                                                                onChange={(e) => setEditingEntry({...editingEntry, quantity: e.target.value})}
+                                                                className="w-20 p-1 text-sm border rounded"
+                                                            />
+                                                        ) : (
+                                                            entry.quantity || '-'
+                                                        )}
+                                                    </td>
+                                                    <td className="p-3 max-w-xs">
+                                                        {editingEntry && editingEntry.id === entry.id ? (
+                                                            <textarea
+                                                                value={editingEntry.comments}
+                                                                onChange={(e) => setEditingEntry({...editingEntry, comments: e.target.value})}
+                                                                className="w-full p-1 text-sm border rounded"
+                                                                rows="2"
+                                                                placeholder="Problème de production..."
+                                                            />
+                                                        ) : (
+                                                            <span className="block truncate" title={entry.comments}>
+                                                                {entry.comments || '-'}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        <div className="flex gap-1">
+                                                            {editingEntry && editingEntry.id === entry.id ? (
+                                                                <>
+                                                                    <button
+                                                                        onClick={saveEdit}
+                                                                        className="text-green-600 hover:text-green-800 text-xs px-2 py-1 bg-green-50 rounded"
+                                                                    >
+                                                                        ✓ Sauver
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={cancelEdit}
+                                                                        className="text-gray-600 hover:text-gray-800 text-xs px-2 py-1 bg-gray-50 rounded"
+                                                                    >
+                                                                        ✗ Annuler
+                                                                    </button>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    {(currentUser.role === 'admin' || entry.employeeId === currentUser.id) && (
+                                                                        <button
+                                                                            onClick={() => startEditing(entry)}
+                                                                            className="text-blue-500 hover:text-blue-700 text-xs px-2 py-1 bg-blue-50 rounded"
+                                                                        >
+                                                                            ✏️ Modifier
+                                                                        </button>
+                                                                    )}
+                                                                    {currentUser.role === 'admin' && (
+                                                                        <button
+                                                                            onClick={() => deleteTimeEntry(entry.id)}
+                                                                            className="text-red-500 hover:text-red-700 transition-colors p-1"
+                                                                        >
+                                                                            <TrashIcon />
+                                                                        </button>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -621,7 +829,11 @@
             );
         };
 
-        ReactDOM.render(<TimeTrackingApp />, document.getElementById('root'));
+        // Rendu de l'application
+        const rootElement = document.getElementById('root');
+        if (rootElement) {
+            ReactDOM.render(React.createElement(TimeTrackingApp), rootElement);
+        }
     </script>
 </body>
 </html>
